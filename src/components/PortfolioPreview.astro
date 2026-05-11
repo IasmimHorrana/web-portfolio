@@ -12,10 +12,6 @@ const { data, id } = Astro.props.project;
 	<a class="card" href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/projetos/${id}`}>
 		<div class="card-header">
 			<span class="title">{data.title}</span>
-			<div class="stars">
-				<Icon icon="star" size="1em" />
-				{Math.floor(Math.random() * 20) + 1}
-			</div>
 		</div>
 		<p class="description">{data.description || 'Nenhuma descrição fornecida.'}</p>
 		
@@ -29,9 +25,6 @@ const { data, id } = Astro.props.project;
 			<div class="lang">
 				<span class="dot"></span>
 				{data.tags && data.tags[0] ? data.tags[0] : 'Markdown'}
-			</div>
-			<div class="commits">
-				{Math.floor(Math.random() * 10) + 1} commits recentes
 			</div>
 		</div>
 	</a>

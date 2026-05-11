@@ -1,6 +1,7 @@
 ---
 title: Weather ETL Pipeline — Salvador, Bahia
 publishDate: 2026-05-01 00:00:00
+description: Sistema de dados com arquitetura Medalhão que coleta, analisa e emite alertas climáticos para Salvador.
 tags:
   - Data Engineering
   - Python

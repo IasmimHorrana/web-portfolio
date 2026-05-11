@@ -19,7 +19,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 				<div class="content">
 					<div class="edu-item">
 						<div class="edu-top">
-							<span class="edu-degree">Bacharelado em Ciência de Dados</span>
+							<span class="edu-degree">Tecnologia em Ciência de Dados</span>
 							<span class="edu-badge">Em andamento</span>
 						</div>
 						<span class="edu-school">UNINTER · conclusão jun/2026</span>
@@ -74,36 +74,15 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 			<section>
 				<h2 class="section-title">Ferramentas</h2>
 				<div class="content">
-					<dl class="skills-list">
-						<div class="skill-row">
-							<dt>Linguagens</dt>
-							<dd>Python (Pandas, PySpark) · SQL · Spark SQL</dd>
-						</div>
-						<div class="skill-row">
-							<dt>Big Data & Cloud</dt>
-							<dd>Databricks · Apache Spark · AWS (S3, EC2)</dd>
-						</div>
-						<div class="skill-row">
-							<dt>Orquestração & DevOps</dt>
-							<dd>Apache Airflow · Docker · dbt</dd>
-						</div>
-						<div class="skill-row">
-							<dt>Bancos de Dados</dt>
-							<dd>PostgreSQL · MySQL · SQL Server</dd>
-						</div>
-						<div class="skill-row">
-							<dt>Arquiteturas</dt>
-							<dd>Data Lake · Medalhão (Bronze/Silver/Gold) · ETL/ELT</dd>
-						</div>
-						<div class="skill-row">
-							<dt>Visualização</dt>
-							<dd>MinIO · Metabase</dd>
-						</div>
-						<div class="skill-row">
-							<dt>Idiomas</dt>
-							<dd>Português (Nativo) · Inglês (B1)</dd>
-						</div>
-					</dl>
+					<ul class="skills-list">
+					<li><strong>Linguagens:</strong> Python (Pandas, PySpark) · SQL · Spark SQL</li>
+					<li><strong>Big Data & Cloud:</strong> Databricks · Apache Spark · AWS (S3, EC2)</li>
+					<li><strong>Orquestração & DevOps:</strong> Apache Airflow · Docker · dbt</li>
+					<li><strong>Bancos de Dados:</strong> PostgreSQL · MySQL · SQL Server</li>
+					<li><strong>Arquiteturas:</strong> Data Lake · MinIO · Medalhão (Bronze/Silver/Gold) · ETL/ELT</li>
+					<li><strong>Visualização:</strong> Metabase</li>
+					<li><strong>Idiomas:</strong> Inglês (B1)</li>
+				</ul>
 				</div>
 			</section>
 
@@ -151,11 +130,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 	/* ── Section title ────────────────────── */
 
 	.section-title {
-		font-size: var(--text-lg);
-		color: var(--gray-0);
-		font-family: var(--font-brand);
-		font-weight: 600;
-		padding-top: 0.1rem;
+		font-size: var(--text-base);
+		color: var(--gray-300);
+		font-family: var(--font-body);
+		font-weight: 500;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		padding-top: 0.25rem;
 	}
 
 	/* ── Educação ─────────────────────────── */
@@ -177,6 +158,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 		font-size: var(--text-base);
 		color: var(--gray-100);
 		font-weight: 600;
+		font-family: var(--font-body);
 	}
 
 	.edu-badge {
@@ -242,7 +224,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 		font-size: var(--text-base);
 		color: var(--gray-0);
 		font-weight: 600;
-		font-family: var(--font-brand);
+		font-family: var(--font-body);
 		margin-bottom: 0.1rem;
 	}
 
@@ -280,30 +262,23 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 	/* ── Skills list ──────────────────────── */
 
 	.skills-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
 		display: flex;
 		flex-direction: column;
-		gap: 0;
-		border-top: 1px solid var(--gray-800);
+		gap: 0.55rem;
+		font-family: var(--font-body);
 	}
 
-	.skill-row {
-		display: grid;
-		grid-template-columns: 160px 1fr;
-		gap: 0.5rem 1.5rem;
-		padding: 0.65rem 0;
-		border-bottom: 1px solid var(--gray-800);
-		align-items: baseline;
-	}
-
-	.skill-row dt {
-		font-size: var(--text-sm);
-		color: var(--gray-400);
-		font-weight: 500;
-	}
-
-	.skill-row dd {
+	.skills-list li {
 		font-size: var(--text-sm);
 		color: var(--gray-200);
-		margin: 0;
+		line-height: 1.6;
+	}
+
+	.skills-list li strong {
+		color: var(--gray-100);
+		font-weight: 600;
 	}
 </style>
