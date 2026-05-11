@@ -3,36 +3,149 @@ import Hero from '../components/Hero.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
-<BaseLayout title="Sobre mim | Iasmim Horrana" description="Sobre a experiência de Iasmim Horrana">
+<BaseLayout title="Sobre mim | Iasmim Horrana" description="Trajetória profissional de Iasmim Horrana, Engenheira de Dados Jr.">
 	<div class="stack gap-20">
 		<main class="wrapper about">
 			<div class="hero-container">
 				<Hero
 					title="Sobre mim"
-					tagline="Obrigada por visitar. Leia abaixo para saber mais sobre minha trajetória profissional."
+					tagline="Engenheira de Dados Jr. apaixonada por pipelines escaláveis, qualidade de dados e aprendizado contínuo."
 				/>
 			</div>
 
+			<!-- ── ESPECIALIZAÇÃO ─────────────────────────────── -->
 			<section>
 				<h2 class="section-title">Especialização</h2>
 				<div class="content">
-					<p>
-						Atualmente focada em arquitetura de dados e engenharia de pipelines escaláveis.
+					<p class="lead">
+						Focada em arquitetura de dados e engenharia de pipelines escaláveis.
+						Experiência com a <strong>Arquitetura Medalhão</strong> (Bronze / Silver / Gold),
+						ecossistema <strong>Databricks</strong> e orquestração com <strong>Apache Airflow</strong>.
 					</p>
+
+					<div class="skills-grid">
+						<div class="skill-group">
+							<span class="skill-group-label">Linguagens & Frameworks</span>
+							<div class="tags">
+								<span class="tag">Python</span>
+								<span class="tag">PySpark</span>
+								<span class="tag">SQL</span>
+								<span class="tag">Spark SQL</span>
+							</div>
+						</div>
+						<div class="skill-group">
+							<span class="skill-group-label">Big Data & Cloud</span>
+							<div class="tags">
+								<span class="tag">Databricks</span>
+								<span class="tag">Apache Spark</span>
+								<span class="tag">AWS S3</span>
+								<span class="tag">AWS EC2</span>
+							</div>
+						</div>
+						<div class="skill-group">
+							<span class="skill-group-label">Orquestração & DevOps</span>
+							<div class="tags">
+								<span class="tag">Apache Airflow</span>
+								<span class="tag">Docker</span>
+								<span class="tag">dbt</span>
+							</div>
+						</div>
+						<div class="skill-group">
+							<span class="skill-group-label">Bancos de Dados</span>
+							<div class="tags">
+								<span class="tag">PostgreSQL</span>
+								<span class="tag">MySQL</span>
+								<span class="tag">SQL Server</span>
+							</div>
+						</div>
+						<div class="skill-group">
+							<span class="skill-group-label">Armazenamento & Visualização</span>
+							<div class="tags">
+								<span class="tag">MinIO</span>
+								<span class="tag">Metabase</span>
+								<span class="tag">Data Lake</span>
+							</div>
+						</div>
+						<div class="skill-group">
+							<span class="skill-group-label">Idiomas</span>
+							<div class="tags">
+								<span class="tag">Português (Nativo)</span>
+								<span class="tag">Inglês (B1)</span>
+							</div>
+						</div>
+					</div>
 				</div>
 			</section>
+
+			<!-- ── TRABALHOS ──────────────────────────────────── -->
 			<section>
 				<h2 class="section-title">Trabalhos</h2>
 				<div class="content">
-					<p>Experiência prática construindo soluções analíticas.</p>
+					<div class="timeline">
+
+						<div class="timeline-item">
+							<div class="timeline-meta">
+								<span class="timeline-period">Set 2025 — Mar 2026</span>
+								<span class="timeline-location">Salvador, BA · Remoto</span>
+							</div>
+							<div class="timeline-body">
+								<h3 class="timeline-role">Engenheira de Dados Jr. — Estágio</h3>
+								<span class="timeline-company">Redrex</span>
+								<ul class="timeline-list">
+									<li>Pipelines de ingestão e transformação no <strong>Databricks</strong>, reduzindo tempo de processamento em até 80%.</li>
+									<li>Implementação da <strong>Arquitetura Medalhão</strong> (Bronze, Silver e Gold) com rastreabilidade e governança de dados.</li>
+									<li>Integração de fontes em um Data Lake centralizado, viabilizando relatórios estratégicos para liderança.</li>
+									<li>Validações e transformações complexas com <strong>Spark SQL</strong>, corrigindo inconsistências antes da carga nas camadas superiores.</li>
+								</ul>
+							</div>
+						</div>
+
+						<div class="timeline-item">
+							<div class="timeline-meta">
+								<span class="timeline-period">Dez 2023 — Nov 2024</span>
+								<span class="timeline-location">Salvador, BA</span>
+							</div>
+							<div class="timeline-body">
+								<h3 class="timeline-role">Assistente de TI e Operações</h3>
+								<span class="timeline-company">Itaparica Tour Operator</span>
+								<ul class="timeline-list">
+									<li>Suporte contínuo a sistemas de reservas e plataformas de gerenciamento, reduzindo tempo de inatividade operacional.</li>
+									<li>Gerenciamento de bases de dados de conteúdo e cadastros de clientes com foco em integridade e consistência.</li>
+									<li>Colaboração com equipes multifuncionais (operações, comercial e atendimento) para manutenção dos sistemas internos.</li>
+								</ul>
+							</div>
+						</div>
+
+					</div>
 				</div>
 			</section>
+
+			<!-- ── CERTIFICAÇÕES ──────────────────────────────── -->
 			<section>
 				<h2 class="section-title">Certificações</h2>
 				<div class="content">
-					<p>Em busca de aprendizado contínuo nas melhores ferramentas de Cloud e Big Data.</p>
+					<p class="lead-sm">Em construção — foco atual em certificações de Cloud e Big Data.</p>
+
+					<div class="cert-grid">
+						<div class="cert-card in-progress">
+							<div class="cert-badge">Em andamento</div>
+							<span class="cert-name">Graduação em Ciência de Dados</span>
+							<span class="cert-issuer">UNINTER · conclusão jun/2026</span>
+						</div>
+						<div class="cert-card planned">
+							<div class="cert-badge planned-badge">Planejado</div>
+							<span class="cert-name">Databricks Certified Associate</span>
+							<span class="cert-issuer">Databricks Academy</span>
+						</div>
+						<div class="cert-card planned">
+							<div class="cert-badge planned-badge">Planejado</div>
+							<span class="cert-name">AWS Cloud Practitioner</span>
+							<span class="cert-issuer">Amazon Web Services</span>
+						</div>
+					</div>
 				</div>
 			</section>
+
 		</main>
 	</div>
 </BaseLayout>
@@ -40,69 +153,261 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 <style>
 	.hero-container {
 		padding-top: 5rem;
-		margin-bottom: 2rem;
+		margin-bottom: 1rem;
 	}
 
 	@media (min-width: 50em) {
 		.hero-container {
 			padding-top: 6rem;
-			margin-bottom: 4rem;
+			margin-bottom: 2rem;
 		}
 	}
+
+	/* ── Layout ───────────────────────────── */
 
 	.about {
 		display: flex;
 		flex-direction: column;
-		gap: 3.5rem;
-	}
-
-	img {
-		margin-top: 1.5rem;
-		border-radius: 1.5rem;
-		box-shadow: var(--shadow-md);
+		gap: 4rem;
+		padding-bottom: 5rem;
 	}
 
 	section {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
-		color: var(--gray-200);
-	}
-
-	.section-title {
-		grid-column-start: 1;
-		font-size: var(--text-xl);
-		color: var(--gray-0);
-	}
-
-	.content {
-		grid-column: 2 / 4;
-	}
-
-	.content :global(a) {
-		text-decoration: 1px solid underline transparent;
-		text-underline-offset: 0.25em;
-		transition: text-decoration-color var(--theme-transition);
-	}
-
-	.content :global(a:hover),
-	.content :global(a:focus) {
-		text-decoration-color: currentColor;
+		gap: 1.5rem;
 	}
 
 	@media (min-width: 50em) {
-		.about {
-			display: grid;
-			grid-template-columns: 1fr 60% 1fr;
-		}
-
-		.about > :global(:first-child) {
-			grid-column-start: 2;
-		}
-
 		section {
-			display: contents;
-			font-size: var(--text-lg);
+			display: grid;
+			grid-template-columns: 200px 1fr;
+			gap: 2rem 3rem;
+			align-items: start;
 		}
+	}
+
+	/* ── Section title ────────────────────── */
+
+	.section-title {
+		font-size: var(--text-xl);
+		color: var(--gray-0);
+		font-family: var(--font-brand);
+		font-weight: 600;
+		padding-top: 0.25rem;
+	}
+
+	/* ── Lead text ────────────────────────── */
+
+	.lead {
+		font-size: var(--text-base);
+		color: var(--gray-200);
+		line-height: 1.7;
+		margin-bottom: 1.5rem;
+	}
+
+	.lead strong {
+		color: var(--gray-100);
+		font-weight: 600;
+	}
+
+	.lead-sm {
+		font-size: var(--text-sm);
+		color: var(--gray-300);
+		margin-bottom: 1.25rem;
+	}
+
+	/* ── Skills grid ──────────────────────── */
+
+	.skills-grid {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 1.25rem;
+	}
+
+	@media (min-width: 50em) {
+		.skills-grid {
+			grid-template-columns: 1fr 1fr;
+		}
+	}
+
+	.skill-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.skill-group-label {
+		font-size: var(--text-sm);
+		color: var(--gray-400);
+		font-weight: 500;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
+	.tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+	}
+
+	.tag {
+		font-size: 0.8rem;
+		font-weight: 500;
+		padding: 0.2rem 0.6rem;
+		border-radius: 999px;
+		background-color: var(--accent-subtle-overlay);
+		color: var(--accent-light);
+		border: 1px solid var(--accent-overlay);
+	}
+
+	/* ── Timeline ─────────────────────────── */
+
+	.timeline {
+		display: flex;
+		flex-direction: column;
+		gap: 2.5rem;
+	}
+
+	.timeline-item {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 0.75rem;
+		padding-left: 1rem;
+		border-left: 2px solid var(--accent-overlay);
+	}
+
+	@media (min-width: 50em) {
+		.timeline-item {
+			grid-template-columns: 140px 1fr;
+			gap: 1.5rem;
+			align-items: start;
+		}
+	}
+
+	.timeline-meta {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		padding-top: 0.1rem;
+	}
+
+	.timeline-period {
+		font-size: var(--text-sm);
+		color: var(--accent-light);
+		font-weight: 500;
+		white-space: nowrap;
+	}
+
+	.timeline-location {
+		font-size: 0.8rem;
+		color: var(--gray-400);
+	}
+
+	.timeline-role {
+		font-size: var(--text-base);
+		color: var(--gray-0);
+		font-weight: 600;
+		font-family: var(--font-brand);
+		margin-bottom: 0.15rem;
+	}
+
+	.timeline-company {
+		font-size: var(--text-sm);
+		color: var(--gray-300);
+		display: block;
+		margin-bottom: 0.75rem;
+	}
+
+	.timeline-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.timeline-list li {
+		font-size: var(--text-sm);
+		color: var(--gray-200);
+		line-height: 1.65;
+		padding-left: 1rem;
+		position: relative;
+	}
+
+	.timeline-list li::before {
+		content: '·';
+		position: absolute;
+		left: 0;
+		color: var(--accent-light);
+		font-size: 1.2em;
+		line-height: 1.4;
+	}
+
+	.timeline-list li strong {
+		color: var(--gray-100);
+		font-weight: 600;
+	}
+
+	/* ── Certificações ────────────────────── */
+
+	.cert-grid {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 1rem;
+	}
+
+	@media (min-width: 50em) {
+		.cert-grid {
+			grid-template-columns: repeat(3, 1fr);
+		}
+	}
+
+	.cert-card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		padding: 1.1rem 1.25rem;
+		border-radius: 0.75rem;
+		border: 1px solid var(--gray-800);
+		background: var(--gradient-subtle);
+		transition: border-color var(--theme-transition);
+	}
+
+	.cert-card:hover {
+		border-color: var(--accent-overlay);
+	}
+
+	.cert-badge {
+		font-size: 0.7rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--accent-light);
+		background-color: var(--accent-subtle-overlay);
+		border: 1px solid var(--accent-overlay);
+		padding: 0.15rem 0.5rem;
+		border-radius: 999px;
+		align-self: flex-start;
+		margin-bottom: 0.25rem;
+	}
+
+	.planned-badge {
+		color: var(--gray-400);
+		background-color: rgba(255,255,255,0.04);
+		border-color: var(--gray-700);
+	}
+
+	.cert-name {
+		font-size: var(--text-sm);
+		color: var(--gray-100);
+		font-weight: 600;
+		line-height: 1.4;
+	}
+
+	.cert-issuer {
+		font-size: 0.8rem;
+		color: var(--gray-400);
 	}
 </style>
