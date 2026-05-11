@@ -1,3 +1,1 @@
-# Portfólio Minimalista - Engenharia de Dados
-
 Bem-vindo ao repositório do meu portfólio pessoal! Este projeto foi desenvolvido para ser extremamente rápido, minimalista e construído sem o uso de Javascript complexo no frontend, utilizando **Astro**, **CSS Nativo** e suporte a **Markdown** para a escrita de projetos.

@@ -16,13 +16,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 				role="Engenheira de Dados Jr"
 			>
 				<div class="hero-buttons">
-					<CallToAction href="/projetos" variant="secondary">
+					<CallToAction href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/projetos`} variant="secondary">
 						Ver Projetos
 					</CallToAction>
-					<CallToAction href="/about" variant="secondary">
+					<CallToAction href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/about`} variant="secondary">
 						Quem sou eu
 					</CallToAction>
-					<CallToAction href="/curriculo.pdf" download="curriculo.pdf" variant="secondary">
+					<CallToAction href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/curriculo.pdf`} download="curriculo.pdf" variant="secondary">
 						<span style="line-height: 1;">Baixar Currículo</span>
 					</CallToAction>
 				</div>
