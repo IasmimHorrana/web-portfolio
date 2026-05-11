@@ -1,0 +1,55 @@
+---
+import { getCollection } from 'astro:content';
+import Grid from '../components/Grid.astro';
+import Hero from '../components/Hero.astro';
+import PortfolioPreview from '../components/PortfolioPreview.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const projects = (await getCollection('projetos')).sort(
+	(a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf(),
+);
+---
+
+<BaseLayout
+	title="Meus Projetos | Iasmim Horrana"
+	description="Veja meus projetos mais recentes."
+>
+	<div class="stack gap-20">
+		<main class="wrapper stack gap-8">
+			<div class="hero-container">
+				<Hero
+					title="Meus Projetos"
+					tagline="Veja abaixo meus projetos recentes e documentações técnicas detalhadas."
+				/>
+			</div>
+			<Grid variant="github">
+				{
+					projects.map((project) => (
+						<li>
+							<PortfolioPreview project={project} />
+						</li>
+					))
+				}
+			</Grid>
+		</main>
+	</div>
+</BaseLayout>
+
+<style>
+	.hero-container {
+		padding-top: 5rem;
+	}
+
+	.hero-container :global(.title) {
+		font-size: var(--text-2xl);
+	}
+
+	@media (min-width: 50em) {
+		.hero-container {
+			padding-top: 6rem;
+		}
+		.hero-container :global(.title) {
+			font-size: var(--text-4xl);
+		}
+	}
+</style>

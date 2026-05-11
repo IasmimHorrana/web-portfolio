@@ -1,0 +1,61 @@
+---
+// Learn about using Astro layouts:
+// https://docs.astro.build/en/basics/layouts/
+
+// Component Imports
+import MainHead from '../components/MainHead.astro';
+import Header from '../components/Header.astro';
+
+interface Props {
+	title?: string | undefined;
+	description?: string | undefined;
+}
+
+const { title, description } = Astro.props;
+---
+
+<html lang="en">
+	<head>
+		<MainHead title={title} description={description} />
+	</head>
+	<body>
+		<div class="stack backgrounds">
+			<Header />
+			<slot />
+		</div>
+
+		<script>
+			// Add “loaded” class once the document has completely loaded.
+			addEventListener('load', () => document.documentElement.classList.add('loaded'));
+		</script>
+
+		<style>
+			:root {
+				--bg-color: #0d1117; /* GitHub Dark background */
+				--bg-grid: rgba(255, 255, 255, 0.03); /* Very subtle grid */
+				--bg-glow: radial-gradient(circle at center, rgba(106, 90, 205, 0.05) 0%, transparent 60%); /* Subtle SlateBlue glow */
+				--text-color: #c9d1d9; /* GitHub Dark text */
+			}
+
+			:root.theme-light {
+				--bg-color: #f9fafb;
+				--bg-grid: rgba(0, 0, 0, 0.05);
+				--bg-glow: radial-gradient(circle at center, rgba(72, 61, 139, 0.03) 0%, transparent 60%);
+				--text-color: #111827;
+			}
+
+			.backgrounds {
+				min-height: 100vh;
+				background-color: var(--bg-color);
+				background-image: 
+					var(--bg-glow),
+					linear-gradient(var(--bg-grid) 1px, transparent 1px),
+					linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+				background-size: 100% 100%, 60px 60px, 60px 60px;
+				background-position: center, center, center;
+				color: var(--text-color);
+				transition: background-color 0.3s ease, color 0.3s ease;
+			}
+		</style>
+	</body>
+</html>

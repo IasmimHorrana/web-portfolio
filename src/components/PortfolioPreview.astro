@@ -1,0 +1,156 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import Icon from './Icon.astro';
+
+interface Props {
+	project: CollectionEntry<'projetos'>;
+}
+
+const { data, id } = Astro.props.project;
+---
+
+	<a class="card" href={`/projetos/${id}`}>
+		<div class="card-header">
+			<span class="title">{data.title}</span>
+			<div class="stars">
+				<Icon icon="star" size="1em" />
+				{Math.floor(Math.random() * 20) + 1}
+			</div>
+		</div>
+		<p class="description">{data.description || 'Nenhuma descrição fornecida.'}</p>
+		
+		<div class="tags">
+			{data.tags && data.tags.slice(0, 3).map((tag) => (
+				<span class="tag">{tag}</span>
+			))}
+		</div>
+
+		<div class="card-footer">
+			<div class="lang">
+				<span class="dot"></span>
+				{data.tags && data.tags[0] ? data.tags[0] : 'Markdown'}
+			</div>
+			<div class="commits">
+				{Math.floor(Math.random() * 10) + 1} commits recentes
+			</div>
+		</div>
+	</a>
+
+<style>
+	.card {
+		display: flex;
+		flex-direction: column;
+		padding: 1.25rem;
+		height: 100%;
+		min-height: 14rem;
+		background-color: #0d1117;
+		border: 1px solid #30363d;
+		border-radius: 0.5rem;
+		text-decoration: none;
+		color: #c9d1d9;
+		transition: border-color 0.2s ease, transform 0.2s ease;
+	}
+
+	.card:hover {
+		border-color: #8b949e;
+		transform: translateY(-2px);
+	}
+
+	:root.theme-light .card {
+		background-color: #ffffff;
+		border-color: #d0d7de;
+		color: #57606a;
+	}
+
+	:root.theme-light .card:hover {
+		border-color: #0969da;
+	}
+
+	.card-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		margin-bottom: 0.5rem;
+		gap: 1rem;
+	}
+
+	.stars {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: #e3b341;
+		white-space: nowrap;
+	}
+
+	.title {
+		font-family: monospace;
+		font-size: 1.125rem;
+		font-weight: 600;
+		color: #6a5acd; /* SlateBlue */
+		word-break: break-word;
+	}
+
+	:root.theme-light .title {
+		color: #483d8b; /* DarkSlateBlue */
+	}
+
+	.description {
+		font-size: 0.875rem;
+		line-height: 1.5;
+		margin: 0 0 1.5rem 0;
+		flex-grow: 1;
+		display: -webkit-box;
+		-webkit-line-clamp: 3;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	.tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-bottom: 1.25rem;
+	}
+
+	.tag {
+		font-size: 0.75rem;
+		font-weight: 500;
+		padding: 0.125rem 0.5rem;
+		border-radius: 999px;
+		background-color: rgba(106, 90, 205, 0.1);
+		color: #6a5acd;
+	}
+
+	:root.theme-light .tag {
+		background-color: rgba(72, 61, 139, 0.1);
+		color: #483d8b;
+	}
+
+	.card-footer {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		font-size: 0.75rem;
+		color: #8b949e;
+		margin-top: auto;
+	}
+
+	:root.theme-light .card-footer {
+		color: #57606a;
+	}
+
+	.lang {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+	}
+
+	.dot {
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		background-color: #6a5acd;
+	}
+</style>

@@ -1,0 +1,79 @@
+---
+interface Props extends astroHTML.JSX.AnchorHTMLAttributes {
+	variant?: 'primary' | 'secondary';
+}
+
+const { href, variant = 'primary', ...rest } = Astro.props;
+---
+
+<a href={href} class={variant} {...rest}><slot /></a>
+
+<style>
+	a {
+		position: relative;
+		display: inline-flex; /* Alterado de flex para inline-flex para abraçar o conteúdo */
+		justify-content: center;
+		align-items: center;
+		text-align: center;
+		padding: 0.8em 2em;
+		gap: 0.8em;
+		text-decoration: none;
+		line-height: 1; /* Reduzi um pouco para evitar que o texto empurre a caixa */
+		border-radius: 999rem;
+		overflow: hidden;
+		box-shadow: var(--shadow-md);
+		white-space: nowrap;
+		font-weight: 600;
+		width: 100%; /* Mantém a largura total em telas pequenas */
+		max-width: 250px;
+		transition: background-color 0.2s ease, transform 0.1s ease;
+	}
+	
+	a:active {
+		transform: scale(0.98);
+	}
+	
+	a.primary {
+		background: #ffffff;
+		color: #000000;
+	}
+
+	a.primary:hover {
+		background: #e5e5e5;
+	}
+
+	a.secondary {
+		background: #1a1a1a;
+		color: #ffffff;
+		border: 1px solid #333;
+	}
+
+	a.secondary:hover {
+		background: #2a2a2a;
+		border-color: #555;
+	}
+
+	:root.theme-light a.secondary {
+		background: #ffffff;
+		color: #111827;
+		border-color: #e5e7eb;
+	}
+
+	:root.theme-light a.secondary:hover {
+		background: #f9fafb;
+		border-color: #d1d5db;
+	}
+
+	@media (min-width: 20em) {
+		a {
+			font-size: var(--text-lg);
+		}
+	}
+
+	@media (min-width: 50em) {
+		a {
+			padding: 1.125rem 2.5rem;
+			font-size: var(--text-xl);
+		}
+	}
+</style>

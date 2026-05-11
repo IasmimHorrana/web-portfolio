@@ -1,0 +1,119 @@
+---
+interface Props {
+	title: string;
+	tagline?: string;
+	align?: 'start' | 'center';
+	role?: string;
+}
+
+const { align = 'center', tagline, title, role } = Astro.props;
+---
+
+<div class:list={['hero stack gap-4', align]}>
+	<div class="stack gap-2">
+		{role && (
+			<div class="role-pill">
+				<span class="dot"></span>
+				{role}
+			</div>
+		)}
+		<h1 class="title">{title}</h1>
+		{tagline && <p class="tagline">{tagline}</p>}
+	</div>
+	<slot />
+</div>
+
+<style>
+	.role-pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.25rem 0.75rem;
+		border-radius: 999px;
+		background-color: #1a1a1a;
+		color: #e5e5e5;
+		font-size: var(--text-sm);
+		margin-inline: auto;
+		border: 1px solid #333;
+		font-weight: 500;
+	}
+	:root.theme-light .role-pill {
+		background-color: #ffffff;
+		color: #111827;
+		border-color: #e5e7eb;
+	}
+
+	.dot {
+		width: 8px;
+		height: 8px;
+		background-color: #6a5acd; /* SlateBlue */
+		border-radius: 50%;
+		box-shadow: 0 0 8px #6a5acd;
+		animation: pulse 2s infinite;
+	}
+	@keyframes pulse {
+		0% {
+			transform: scale(0.95);
+			box-shadow: 0 0 0 0 rgba(106, 90, 205, 0.7);
+		}
+		70% {
+			transform: scale(1);
+			box-shadow: 0 0 0 6px rgba(106, 90, 205, 0);
+		}
+		100% {
+			transform: scale(0.95);
+			box-shadow: 0 0 0 0 rgba(106, 90, 205, 0);
+		}
+	}
+	.hero {
+		font-size: var(--text-lg);
+		text-align: center;
+	}
+
+	.title,
+	.tagline {
+		margin-inline: auto;
+		text-align: center;
+	}
+
+	.title {
+		font-size: var(--text-3xl);
+		color: #f0f6fc; /* Softer white for dark mode */
+		font-weight: 700;
+		max-width: 25ch;
+		line-height: 1.2;
+	}
+	:root.theme-light .title {
+		color: #111827;
+	}
+
+	.tagline {
+		color: #8b949e; /* Softer gray for dark mode */
+		font-size: var(--text-md);
+		max-width: 60ch;
+		line-height: 1.6;
+		margin-top: 0.5rem;
+	}
+	:root.theme-light .tagline {
+		color: #4b5563;
+	}
+
+	@media (min-width: 50em) {
+		.hero {
+			font-size: var(--text-xl);
+		}
+
+		.start {
+			text-align: start;
+		}
+
+		.start .title,
+		.start .tagline {
+			margin-inline: unset;
+		}
+
+		.title {
+			font-size: var(--text-5xl);
+		}
+	}
+</style>
