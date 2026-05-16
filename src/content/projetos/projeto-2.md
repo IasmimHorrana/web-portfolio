@@ -1,6 +1,6 @@
 ---
-title: Projeto PDF Pipeline
-publishDate: 2026-04-30 00:00:00
+title: PDF Pipeline
+publishDate: 2026-05-15 00:00:00
 description: Pipeline desenvolvida para automatizar o processamento de notas de corretagem em formato PDF.
 tags:
   - Apache Airflow
@@ -13,225 +13,322 @@ github: https://github.com/IasmimHorrana/pdf-extract-pipeline
 
 ---
 
-O **PDF Pipeline** é um pipeline de engenharia de dados desenvolvido para automatizar o processamento de notas de corretagem em formato PDF. O sistema monitora um bucket do MinIO, detecta novos arquivos, extrai informações estruturadas (texto e tabelas), parseia os dados relevantes e os armazena em um Data Warehouse no PostgreSQL.
+O **PDF Pipeline** resolve um problema real: notas de corretagem chegam como PDFs não estruturados. Extrair, organizar e armazenar esses dados manualmente é trabalhoso e propenso a erros.
 
-O projeto foi concebido para rodar de forma contínua e idempotente, processando automaticamente novos PDFs assim que são enviados para o bucket de entrada. Cada nota de corretagem contém informações sobre operações de compra e venda de ativos, taxas cobradas e dados do cliente, que são transformado em dados estruturados para análise posterior.
+Este projeto automatiza completamente esse processo:
 
-A solução integra múltiplas tecnologias de código aberto, utilizando o Apache Airflow como orquestrador de tarefas, o MinIO como armazenamento de objetos compatível com S3, e o PostgreSQL como banco de dados relacional para persistência dos dados processados.
+1. O usuário faz upload do PDF para um bucket MinIO
+2. O Airflow detecta o arquivo, extrai texto e tabelas
+3. Os dados são parseados e persistidos em um Data Warehouse PostgreSQL
+4. O PDF é marcado como processado e movido automaticamente
+
+O sistema é **contínuo**, **idempotente** e **tolerante a falhas** — o Airflow reprocessa automaticamente em caso de erro, sem criar duplicatas no banco.
+
+---
 
 #### Stack Tecnológica
 
-| Componente | Ferramenta | Versão | Descrição |
-|------------|------------|--------|------------|
-| Orquestração | Apache Airflow | 2.9.3 | Gerencia a execução das tarefas do pipeline |
-| Armazenamento | MinIO | - | Armazenamento de objetos S3-compatible |
-| Banco de Dados | PostgreSQL | - | Data Warehouse para dados estruturados |
-| Extração de Texto | PyPDF2 | - | Leitura de conteúdo textual dos PDFs |
-| Extração de Tabelas | Camelot | - | Detecção e extração de tabelas em PDFs |
-| Bibliotecas Python | Pandas | 2.1.4 | Manipulação e análise de dados |
-| Conexão S3 | boto3 | <1.35 | Cliente AWS S3 para MinIO |
-| Logging | loguru | - | logging estruturado e simplicado |
-| Validação | Pydantic | - | Validação de modelos de dados |
-| Testes | pytest | - | Framework de testes unitários |
-| Linting | ruff | - | Análise estática de código |
+| Camada | Tecnologia | Papel |
+|---|---|---|
+| Orquestração | Apache Airflow 2.9+ | Gerencia execução, retries e dependências entre tarefas |
+| Object Storage | MinIO (S3-compatible) | Recebe PDFs via upload e armazena processados |
+| Banco de Dados | PostgreSQL | Data Warehouse estruturado (schema **dw** + **staging**) |
+| Extração de Texto | PyPDF2 | Lê conteúdo textual página a página |
+| Extração de Tabelas | Camelot | Detecta e extrai tabelas (lattice → stream fallback) |
+| Conexão S3 | boto3 | Cliente AWS S3 adaptado para MinIO |
+| Logging | Loguru | Logging estruturado com contexto em todos os módulos |
+| Validação | Pydantic | Modelos de dados tipados |
+| Testes | pytest + pytest-cov | Testes unitários com relatório de cobertura |
+| Linting | ruff | Análise estática, formatação e verificação de imports |
+| Gerenciador | uv | Gerenciamento de dependências e ambientes virtuais |
+| Containers | Docker + Compose | Airflow (init + webserver + scheduler) + pgAdmin |
 
-#### Etapa 1: Detecção de Novos Arquivos
+---
 
-O sensor MinIONewFileSensor verifica periodicamente (a cada 2 minutos) o bucket configurado na pasta uploads/. Quando novos arquivos são detectados, o sensor retorna a lista de objetos encontrados e trigger o próximo operador. O sensor utiliza o hook MinIOHook para conectar ao MinIO e listar os objetos disponíveis.
+#### Arquitetura
 
-#### Etapa 2: Extração do PDF
+```mermaid
+flowchart LR
+    U(["👤 Usuário\n(upload PDF)"])
 
-O ExtractOperator baixa cada PDF do MinIO para o diretório temporário do Airflow. Em seguida, utiliza os extratores para capturar o conteúdo:
+    subgraph MinIO["🗄 MinIO — Object Storage"]
+        UP["uploads/\nnova_nota.pdf"]
+        PR["processed/\nnova_nota.pdf"]
+    end
 
-- O **TextExtractor** percorre todas as páginas do PDF e extrai o texto completo de cada uma, armazenando em uma lista de dicionários com o número da página e seu conteúdo.
-- O **TableExtractor** tenta detectar tabelas usando primeiro o método lattice (para tabelas com bordas visíveis) e, se não encontrar, o método stream (para tabelas sem bordas claras).
-- O **PDFExtractor** combina ambos os extratores em um único resultado estruturado.
+    subgraph Airflow["⚙ Apache Airflow — DAG: pdf_pipeline"]
+        direction TB
+        S[" MinIONewFileSensor\ndetect_new_files\n(poke: 30s / timeout: 600s)"]
+        E["ExtractOperator\nextract_pdf"]
+        L["LoadOperator\nload_pdf_data"]
+        S -->|"XCom: new_files[ ]"| E
+        E -->|"XCom: extracted_files[ ]"| L
+    end
 
-#### Etapa 3: Parse dos Dados
+    subgraph Python["src/ — Módulos de Processamento"]
+        direction TB
+        PE["PDFExtractor\n(orquestrador)"]
+        TE["TextExtractor\n(PyPDF2)"]
+        TB2["TableExtractor\n(Camelot)"]
+        NL["NotasCorretagemLoader\n(parse + upsert)"]
+        TE --> PE
+        TB2 --> PE
+    end
 
-Após a extração, o operador parseia o conteúdo textual usando expressões regulares para identificar campos como número da nota, data de pregão, cliente, corretora, conta de liquidação, operações e taxas. O parser foi desenvolvido para reconhecer códigos de ações com final 3 (como VALE3, BBAS3) e final 4 (como PETR4, BBDC4).
+    subgraph PG["PostgreSQL — Data Warehouse"]
+        direction TB
+        NC[("dw.notas_corretagem")]
+        OP[("dw.operacoes")]
+        TX[("dw.taxas")]
+        ST[("staging.dados_brutos")]
+        NC --> OP
+        NC --> TX
+        NC --> ST
+    end
 
-#### Etapa 4: Load no PostgreSQL
+    U --> UP
+    UP -->|"sensor detecta"| S
+    E -->|"download + extração"| PE
+    E -->|"move após extração"| PR
+    L --> NL
+    NL -->|"INSERT/UPDATE"| NC
+    NL -->|"backup JSON"| ST
+```
 
-O LoadOperator utiliza o NotasCorretagemLoader para inserir ou atualizar os dados no banco. O loader realiza um UPSERT (INSERT ou UPDATE) para garantir idempotência, evitando duplicatas em caso de retry do Airflow. Os dados são salvos em três tabelas do schema dw (notas_corretagem, operacoes, taxas) e um backup em JSON no schema staging.
+---
 
-#### Etapa 5: Movimentação do PDF
+#### Fluxo de Dados
 
-Após a extração bem-sucedida, o operador move o PDF da pasta `uploads/` para `processed/`, garantindo que o mesmo arquivo não seja processado novamente em execuções futuras.
+#### Task 1 — **detect_new_files** (MinIONewFileSensor)
 
-#### Estrutura de Pastas
+- Verifica a pasta `uploads/` do bucket a cada **30 segundos**
+- Filtra apenas arquivos `.pdf` que não estejam em `processed/`
+- Faz **XCom push** da lista `new_files[]` para a próxima task
+- Timeout de 600s; retries configurados com backoff de 5 minutos
 
-A estrutura de pastas do projeto segue convenções claras para organização do código, configurações e recursos. Cada diretório tem uma finalidade específica que facilita a manutenção e a evolução do sistema.
+#### Task 2 — **extract_pdf** (ExtractOperator)
+
+- Recebe a lista via **XCom pull** (**new_files[]**)
+- Faz **download** do PDF do MinIO para **/tmp/pdf_pipeline/**
+- Executa **PDFExtractor.extract()**:
+  - **TextExtractor** → extrai texto de todas as páginas via PyPDF2
+  - **TableExtractor** → tenta **lattice** primeiro; fallback para **stream**
+- Serializa o resultado em **JSON intermediário** (**extracted**)
+- Move o PDF de **uploads/** → **processed/** via **MinIOHook.move_object()**
+- Faz **XCom push** da lista **extracted_files[]**
+
+#### Task 3 — **load_pdf_data** (LoadOperator)
+
+- Recebe a lista via **XCom pull** (**extracted_files[]**)
+- Lê o JSON intermediário e instancia **NotasCorretagemLoader**
+- Parseia o conteúdo textual via **regex** para extrair:
+  - Dados da nota: cliente, corretora, conta, número, data de pregão
+  - Operações: código do ativo, tipo (C/V), quantidade, cotação
+  - Taxas: IRRF, ajuste, corretagem, registro
+- Verifica **idempotência** (**_check_nota_exists**) antes de inserir
+- Executa **UPSERT** nas tabelas do schema **dw**
+- Salva backup bruto em **staging.dados_brutos** (JSONB)
+- Comita a transação e fecha a conexão
+
+---
+
+### Estrutura do Projeto
 
 ```
 projeto-pdf-pipeline/
-├── config/                          # Configurações do ambiente
-│   ├── docker-compose.yaml          # Compose principal (Airflow + pgAdmin)
-│   └── .env                         # Variáveis de ambiente
+├── config/
+│   ├── docker-compose.yaml       # Airflow init + webserver + scheduler + pgAdmin
+│   └── .env.example              # Template de variáveis de ambiente
 │
-├── dags/                            # DAGs e componentes Airflow
-│   ├── pdf_pipeline_dag.py          # DAG principal do pipeline
-│   ├── hooks/                       # Hooks de conexão
-│   │   ├── __init__.py
-│   │   ├── minio_hook.py           # Hook MinIO/S3
-│   │   └── postgres_hook.py        # Hook PostgreSQL
-│   ├── operators/                   # Operators customizados
-│   │   ├── __init__.py
-│   │   ├── extract_operator.py     # Extrai dados do PDF
-│   │   └── load_operator.py        # Carrega no PostgreSQL
-│   └── sensors/                    # Sensors customizados
-│       ├── __init__.py
-│       └── minio_sensor.py         # Detecta novos PDFs
+├── dags/
+│   ├── pdf_pipeline_dag.py       # DAG principal (schedule: */2 * * * *)
+│   ├── hooks/
+│   │   ├── minio_hook.py         # boto3 wrapper para MinIO
+│   │   └── postgres_hook.py      # psycopg2 wrapper para PostgreSQL
+│   ├── operators/
+│   │   ├── extract_operator.py   # Download + extração + move
+│   │   └── load_operator.py      # Parse + upsert PostgreSQL
+│   └── sensors/
+│       └── minio_sensor.py       # BaseSensorOperator — detecta PDFs novos
 │
-├── docker/                          # Dockerfiles customizados
-│   └── Dockerfile                  # Airflow com dependências
+├── src/
+│   ├── extractors/
+│   │   ├── pdf_extractor.py      # Facade: combina texto + tabelas
+│   │   ├── text_extractor.py     # PyPDF2 — extração página a página
+│   │   └── table_extractor.py    # Camelot — lattice com fallback stream
+│   ├── loaders/
+│   │   └── notas_corretagem_loader.py  # Parser regex + UPSERT idempotente
+│   └── utils/
+│       └── logging_config.py     # Loguru — logging estruturado
 │
-├── docs/                            # Documentação adicional
+├── sql/
+│   └── notas_corretagem.sql      # Schemas dw + staging com índices
 │
-├── logs/                            # Logs da aplicação
-│
-├── samples/                         # PDFs de exemplo para teste
-│   ├── Notas_Corretagem_Final-1.pdf
-│   └── Notas_Corretagem_Final-2.pdf
-│
-├── sql/                            # Scripts SQL (schemas)
-│   └── notas_corretagem.sql       # Schema Data Warehouse
-│
-├── scripts/                        # Scripts de desenvolvimento
-│   ├── pdf_viz.py                  # Visualização de PDF
-│   └── preview_notas_loader.py     # Preview sem insert
-│
-├── src/                            # Código fonte principal
-│   ├── __init__.py
-│   ├── extractors/                 # Extratores de PDF
-│   │   ├── __init__.py
-│   │   ├── text_extractor.py      # Extração de texto (PyPDF2)
-│   │   ├── table_extractor.py     # Extração de tabelas (Camelot)
-│   │   └── pdf_extractor.py       # Wrapper combinando ambos
-│   │
-│   ├── loaders/                    # Loaders (PostgreSQL)
-│   │   ├── __init__.py
-│   │   └── notas_corretagem_loader.py  # Loader principal
-│   │
-│   ├── models/                     # Modelos de dados (Pydantic)
-│   │
-│   ├── utils/                      # Utilitários
-│   │   ├── __init__.py
-│   │   └── logging_config.py      # Configuração de logging
-│   │
-│   └── validators/                 # Validadores de dados
-│
-├── tests/                          # Testes unitários
-│   ├── __init__.py
+├── tests/
 │   ├── test_text_extractor.py
 │   ├── test_table_extractor.py
 │   ├── test_pdf_extractor.py
-│   └── test_notas_loader.py
+│   └── test_loader_insert.py
 │
-├── pyproject.toml                  # Configurações do projeto (UV)
-├── uv.lock                         # Lock de dependências
-├── README.md                       # Documentação básica
-├── DOCUMENTATION.md                # Documentação completa
-├── SESSOES_GUIA.md                 # Histórico de desenvolvimento
-└── MELHORIAS.md                    # Lista de melhorias futuras
+├── samples/                      # PDFs de exemplo para testes
+├── scripts/                      # Utilitários de desenvolvimento
+├── docs/                         # Diagramas de arquitetura
+└── pyproject.toml                # Configuração uv + ruff + pytest
 ```
 
-A organização segue o princípio de separação de responsabilidades, onde código de negócio (src/), configurações de orquestração (dags/), testes (tests/) e recursos estáticos (samples/, sql/) mantêm suas próprias estruturas independentes.
-
-#### Hooks
-
-Os hooks abstraem a conexão com sistemas externos, permitindo que os operadores interajam com o MinIO e PostgreSQL de forma padronizada.
-
-**MinIOHook** (`dags/hooks/minio_hook.py`): Fornece métodos para conectar ao MinIO usando boto3, listar objetos, baixar arquivos, carregar arquivos e mover objetos entre pastas. Utiliza a connection configurada no Airflow para obter credenciais e endpoint.
-
-**PostgresHook** (`dags/hooks/postgres_hook.py`): Abstração para conexão PostgreSQL via Airflow. Métodos principais incluem get_conn() para obter conexão, get_records() para SELECT, run() para INSERT/UPDATE/DELETE, run_many() para operações em batch, e close() para fechar a conexão.
-
-#### Sensors
-
-**MinIONewFileSensor** (`dags/sensors/minio_sensor.py`): Sensor que verifica continuamente a pasta uploads/ do bucket MinIO em busca de novos arquivos. Implementa o padrão poke do Airflow, verificando periodicamente (poke_interval) até encontrar arquivos novos ou atingir o timeout configurado.
-
-#### Operators
-
-**ExtractOperator** (`dags/operators/extract_operator.py`): Operator personalizado que baixa PDFs do MinIO, extrai texto e tabelas usando os extratores do src/, parseia os dados e salva o resultado em JSON temporário. Após a extração bem-sucedida, move o PDF para a pasta processed/ no MinIO, garantindo idempotência.
-
-**LoadOperator** (`dags/operators/load_operator.py`): Operator que lê o JSON temporário gerado pelo ExtractOperator e utiliza o NotasCorretagemLoader para inserir ou atualizar os dados no PostgreSQL. Salva os dados estruturados nas tabelas dw e mantém um backup em staging.
-
-#### DAG Principal
-
-**pdf_pipeline_dag.py**: Define o workflow completo do pipeline. Configurado para rodar a cada 2 minutos (schedule_interval='*/2 * * * *'), com as tarefas detect_new_files, extract_pdf e load_pdf_data connected em sequência.
-
-#### Extractors e Loaders
-
-Os extratores e loaders são o núcleo do processamento de dados, transformando PDFs não estruturados em dados tabulares organizados.
-
-#### TextExtractor
-
-O TextExtractor utiliza a biblioteca PyPDF2 para ler o conteúdo textual de cada página do PDF. Para cada página, cria um dicionário contendo o número da página e o texto extraído. O método extract() retorna uma lista de dicionários, um para cada página do documento.
-
-A extração de texto é útil para capturar informações como dados do cliente, número da nota, data de pregão e outras informações que aparecem no corpo do documento, mas que não estão estruturadas em formato de tabela.
-
-#### TableExtractor
-
-O TableExtractor utiliza a biblioteca Camelot para detectar e extrair tabelas dos PDFs. O extrator tenta primeiro o método lattice (que funciona bem para tabelas com bordas visíveis e linhas definidas) e, se não encontrar resultados, tenta o método stream (que detecta tabelas por análise de espaçamento e alinhamento).
-
-O método extract() retorna uma lista de dicionários, onde cada entrada contém o número da página e os dados da tabela em formato de lista de listas (cada sublista representa uma linha da tabela).
-
-#### PDFExtractor
-
-O PDFExtractor é um wrapper que combina os resultados do TextExtractor e TableExtractor em um único objeto estruturado. Fornece uma interface unificada para extrair todo o conteúdo relevante de um PDF, simplificando o trabalho dos operadores que o utilizam.
-
-#### NotasCorretagemLoader
-
-O NotasCorretagemLoader é responsável por transformar os dados extraídos e parseados em INSERTs e UPDATEs no PostgreSQL. Implementa idempotência através de uma constraint UNIQUE na tabela dw.notas_corretagem, garantindo que a mesma nota não seja inserida duas vezes.
-
-O loader divide os dados em três partes: dados principais da nota (cliente, corretora, conta, etc.), operações (compra/venda de ativos) e taxas (IRRF, corretagem, registro). Cada parte é inserida em sua respective tabela, com as devidas relações através de foreign keys.
+---
 
 #### Schema do Banco de Dados
 
-O banco de dados utiliza dois schemas distintos: dw (Data Warehouse) para dados de negócio e staging para dados brutos de auditoria.
+O banco utiliza dois schemas: **dw** (dados de negócio, prontos para análise) e **staging** (dados brutos para auditoria).
 
-#### Schema dw (Data Warehouse)
+##### dw.notas_corretagem
 
-O schema dw contém as tabelas com dados estruturados e validados do negócio.
-
-**dw.notas_corretagem**: Armazena as informações principais de cada nota de corretagem.
+Tabela principal com uma constraint **UNIQUE(corretora, conta_liquidacao, numero_fatura, data_pregao)** que garante **idempotência** — o mesmo PDF pode ser reprocessado sem gerar duplicatas.
 
 | Coluna | Tipo | Descrição |
-|--------|------|------------|
-| id | SERIAL | Chave primária |
-| file_name | VARCHAR(255) | Nome do arquivo PDF processado |
-| cliente | VARCHAR(255) | Nome do cliente |
-| corretora | VARCHAR(255) | Nome da corretora |
-| conta_liquidacao | VARCHAR(50) | Conta de liquidação |
-| numero_fatura | INTEGER | Número da nota |
-| data_pregao | DATE | Data do pregão (YYYY-MM-DD) |
-| upload_date | TIMESTAMP | Timestamp do processamento |
-| processed_date | TIMESTAMP | Data em que foi processado |
-| created_at | TIMESTAMP | Data de criação do registro |
+|---|---|---|
+| **id** | SERIAL PK | Identificador único |
+| **file_name** | VARCHAR | Nome do arquivo PDF |
+| **corretora** | VARCHAR | Nome da corretora |
+| **cliente** | VARCHAR | Nome do cliente |
+| **conta_liquidacao** | VARCHAR | Conta de liquidação |
+| **numero_fatura** | VARCHAR | Número da nota |
+| **nota_numero** | INT | Número sequencial |
+| **data_pregao** | DATE | Data do pregão (ISO 8601) |
+| **status** | VARCHAR | **success** \| **error** |
+| **upload_date** | TIMESTAMP | Data do upload original |
+| **processed_date** | TIMESTAMP | Data do processamento |
 
-Constraints: UNIQUE(corretora, conta_liquidacao, numero_fatura, data_pregao)
-
-**dw.operacoes**: Armazena as operações de compra e venda de cada nota.
-
-| Coluna | Tipo | Descrição |
-|--------|------|------------|
-| id | SERIAL | Chave primária |
-| nota_id | INTEGER | FK para dw.notas_corretagem |
-| operacao | VARCHAR(10) | Compra (C) ou Venda (V) |
-| mercadoria | VARCHAR(20) | Código do ativo (PETR4, VALE3, etc.) |
-| quantidade | INTEGER | Quantidade de contratos |
-| cotacao | NUMERIC(12,2) | Preço por contrato |
-| tipo_mercado | VARCHAR(20) | Tipo de mercado |
-| created_at | TIMESTAMP | Data de criação |
-
-**dw.taxas**: Armazena as taxas cobradas em cada nota.
+##### **dw.operacoes**
 
 | Coluna | Tipo | Descrição |
-|--------|------|------------|
-| id | SERIAL | Chave primária |
-| nota_id | INTEGER | FK para dw.notas_corretagem |
-| irrf | NUMERIC(12,2) | Imposto de Renda Retido na Fonte |
-| ajuste | NUMERIC(12,2) | Ajuste de custo |
-| taxa_corretagem | NUMERIC(12,2) | Taxa de corretagem |
-| taxa_registro | NUMERIC(12,2) | Taxa de registro |
-| created_at | TIMESTAMP | Data de criação |
+|---|---|---|
+| **nota_id** | INT FK | Referência à nota |
+| **operacao** | VARCHAR | **C** (compra) ou **V** (venda) |
+| **mercadoria** | VARCHAR | Código do ativo (ex: **VALE3**, **PETR4**) |
+| **tipo** | VARCHAR | Tipo de mercado |
+| **vencimento** | DATE | Data de vencimento |
+| **quantidade** | INT | Quantidade de contratos |
+| **cotacao** | DECIMAL | Preço por contrato |
+| **taxa_op** | DECIMAL | Taxa operacional |
+
+##### **dw.taxas**
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| **nota_id** | INT FK | Referência à nota |
+| **irrf** | DECIMAL | Imposto de Renda Retido na Fonte |
+| **ajuste** | DECIMAL | Ajuste de custo |
+| **taxa_corretagem** | DECIMAL | Taxa de corretagem |
+| **taxa_registro** | DECIMAL | Taxa de registro/bolsa |
+
+##### **staging.dados_brutos**
+
+Backup do conteúdo bruto extraído para fins de auditoria e reprocessamento.
+
+| Coluna | Tipo | Descrição |
+|---|---|---|
+| **nota_id** | INT FK | Referência à nota |
+| **text_content** | TEXT | Texto completo extraído |
+| **table_data** | JSONB | Tabelas extraídas em JSON |
+
+---
+
+### Desenvolvimento Local
+
+#### Pré-requisitos
+
+- Python 3.12+
+- [uv](https://docs.astral.sh/uv/) (gerenciador de pacotes)
+- Docker + Docker Compose
+
+#### Setup
+
+```bash
+# Clonar o repositório
+git clone https://github.com/IasmimHorrana/pdf-extract-pipeline
+cd pdf-extract-pipeline
+
+# Instalar dependências
+uv sync
+
+# Copiar variáveis de ambiente
+cp config/.env.example config/.env
+```
+
+#### Subir a infraestrutura
+
+```bash
+# Iniciar Airflow + PostgreSQL + MinIO
+docker compose -f config/docker-compose.yaml up -d
+
+# Aguardar inicialização (~30s) e acessar:
+# Airflow:    http://localhost:8081
+# pgAdmin:    http://localhost:5051
+# MinIO:      http://localhost:9001
+```
+
+#### Configurar conexões no Airflow
+
+Acesse **Admin > Connections** e adicione:
+
+- **minio_default** (tipo: HTTP) — host, porta e credenciais do MinIO
+- **postgres_default** (tipo: Postgres) — host **weather_postgres**, banco **pdf_db**
+
+#### Testar extração localmente
+
+```bash
+# Preview dos dados extraídos (sem inserir no banco)
+uv run python scripts/preview_notas_loader.py
+
+# Extração direta de um PDF
+uv run python -c "
+from src.extractors import PDFExtractor
+result = PDFExtractor().extract('samples/Notas_Corretagem_Final-1.pdf')
+print(f'Páginas: {result.total_pages} | Tabelas: {result.total_tables}')
+"
+```
+
+#### Testes e qualidade de código
+
+```bash
+# Lint e formatação
+uv run ruff check .
+uv run ruff format .
+
+# Testes com cobertura
+uv run pytest tests/ --cov=src --cov-report=term-missing
+```
+
+---
+
+### Por que MinIO e não pasta local?
+
+MinIO simula a API S3 localmente, tornando o projeto compatível com ambientes de produção na nuvem (AWS S3, Google Cloud Storage) com zero mudança de código. A abstração via **MinIOHook** isola a implementação.
+
+##### Por que dois schemas (**dw** e **staging**)?
+
+O schema `dw` contém apenas dados validados e estruturados, prontos para análise em ferramentas como Metabase ou Power BI. O schema `staging` guarda os dados brutos como backup de auditoria, permitindo reprocessar qualquer nota sem precisar do PDF original.
+
+##### Idempotência via constraint única
+
+A constraint **UNIQUE(corretora, conta_liquidacao, numero_fatura, data_pregao)** garante que o Airflow pode fazer retry ilimitado de qualquer task sem risco de duplicar registros no banco. O loader faz **UPDATE** se a nota já existe, **INSERT** caso contrário.
+
+---
+
+#### Glossário
+
+| Termo | Definição |
+|---|---|
+| **Nota de Corretagem** | Documento emitido pela corretora resumindo as operações do pregão |
+| **Pregão** | Período de negociação na bolsa de valores |
+| **IRRF** | Imposto de Renda Retido na Fonte sobre ganhos em renda variável |
+| **Lattice** | Método Camelot para PDFs com tabelas de bordas visíveis |
+| **Stream** | Método Camelot para PDFs com tabelas sem bordas (por espaçamento) |
+| **Idempotência** | Propriedade de poder executar múltiplas vezes sem efeito colateral |
+| **UPSERT** | Operação que insere ou atualiza dependendo da existência do registro |
+| **XCom** | Mecanismo do Airflow para passar dados entre tasks de uma DAG |
+| **DAG** | Directed Acyclic Graph — grafo de tarefas do Airflow |
+| **Hook** | Abstração de conexão com sistema externo no Airflow |
+| **Sensor** | Operador que aguarda uma condição antes de liberar a próxima task |
